@@ -6,8 +6,9 @@ DISLOCKER_MOUNT_DIR="/mnt/dislocker_mount"
 # Directory per montare la partizione decifrata
 BITLOCKER_MOUNT_DIR="/mnt/bitlocker_mount"
 
-# Password di BitLocker hardcoded
-BITLOCKER_PASSWORD="575685-553509-596849-610005-173536-580492-014278-214962"
+# Recovery keys hardcoded
+RECOVERY_KEY_1="097471-239811-382591-296252-034991-220143-267597-017897"
+RECOVERY_KEY_2="269610-395901-307868-117524-446336-318538-203709-610610"
 
 # Funzione per installare i pacchetti necessari
 install_packages() {
@@ -81,9 +82,28 @@ mount_bitlocker() {
     echo "Inserisci il percorso della partizione BitLocker (es. /dev/sdb1):"
     read -r partition
 
-    # Montaggio della partizione BitLocker con la password hardcoded
-    echo "Montaggio della partizione BitLocker con la password hardcoded..."
-    sudo dislocker -V "$partition" -u"$BITLOCKER_PASSWORD" -- "$DISLOCKER_MOUNT_DIR"
+    # Chiedi all'utente quale recovery key usare
+    echo "Scegli la recovery key da utilizzare:"
+    echo "1. $RECOVERY_KEY_1"
+    echo "2. $RECOVERY_KEY_2"
+    read -r key_choice
+
+    case $key_choice in
+        1)
+            recovery_key="$RECOVERY_KEY_1"
+            ;;
+        2)
+            recovery_key="$RECOVERY_KEY_2"
+            ;;
+        *)
+            echo "Scelta non valida. Uscita."
+            exit 1
+            ;;
+    esac
+
+    # Montaggio della partizione BitLocker con la recovery key
+    echo "Montaggio della partizione BitLocker con la recovery key..."
+    sudo dislocker -V "$partition" -p$recovery_key -- "$DISLOCKER_MOUNT_DIR"
     if [ $? -ne 0 ]; then
         echo "Errore durante il montaggio della partizione BitLocker."
         exit 1
