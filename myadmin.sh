@@ -6,10 +6,6 @@ DISLOCKER_MOUNT_DIR="/mnt/dislocker_mount"
 # Directory per montare la partizione decifrata
 BITLOCKER_MOUNT_DIR="/mnt/bitlocker_mount"
 
-# Recovery keys hardcoded
-RECOVERY_KEY_1="097471-239811-382591-296252-034991-220143-267597-017897"
-RECOVERY_KEY_2="269610-395901-307868-117524-446336-318538-203709-610610"
-
 # Funzione per installare i pacchetti necessari
 install_packages() {
     echo "Installazione dei pacchetti necessari..."
@@ -76,30 +72,31 @@ show_partitions() {
     echo ""
 }
 
+# Funzione per visualizzare i Recovery Key GUID della partizione BitLocker
+show_recovery_key_guid() {
+    local partition="$1"
+    echo "Ottenimento dei Recovery Key GUID per la partizione $partition..."
+    
+    # Utilizzo di dislocker-metadata per ottenere le informazioni sulla partizione BitLocker
+    echo "Informazioni sulla partizione BitLocker:"
+    sudo dislocker-metadata -V "$partition" | grep "Recovery Key GUID"
+    
+    echo ""
+    echo "Usa questi GUID per identificare la recovery key corretta da utilizzare."
+}
+
 # Funzione per montare la partizione BitLocker
 mount_bitlocker() {
     show_partitions
     echo "Inserisci il percorso della partizione BitLocker (es. /dev/sdb1):"
     read -r partition
-
-    # Chiedi all'utente quale recovery key usare
-    echo "Scegli la recovery key da utilizzare:"
-    echo "1. $RECOVERY_KEY_1"
-    echo "2. $RECOVERY_KEY_2"
-    read -r key_choice
-
-    case $key_choice in
-        1)
-            recovery_key="$RECOVERY_KEY_1"
-            ;;
-        2)
-            recovery_key="$RECOVERY_KEY_2"
-            ;;
-        *)
-            echo "Scelta non valida. Uscita."
-            exit 1
-            ;;
-    esac
+    
+    # Mostra i Recovery Key GUID
+    show_recovery_key_guid "$partition"
+    
+    # Chiedi all'utente di inserire la recovery key
+    echo "Inserisci la recovery key per la partizione (formato 123456-789012-...):"
+    read -r recovery_key
 
     # Montaggio della partizione BitLocker con la recovery key
     echo "Montaggio della partizione BitLocker con la recovery key..."
